@@ -16,46 +16,6 @@ unless ENV['BEAKER_provision'] == 'no'
 end
 
 
-def certs(host, ip)
-  keypair = OpenSSL::PKey::RSA.new( 4096 )
-
-  req            = OpenSSL::X509::Request.new
-  req.version    = 0
-  req.subject    = OpenSSL::X509::Name.parse(
-      "CN=#{host}/O=Hosts/OU=Fake Org/C=ZZ"
-  )
-  req.public_key = keypair.public_key
-  req.sign( keypair, OpenSSL::Digest::SHA1.new )
-
-  cert            = OpenSSL::X509::Certificate.new
-  cert.version    = 2
-  cert.serial     = rand( 999999 )
-  cert.not_before = Time.new
-  cert.not_after  = cert.not_before + (60 * 60 * 24 * 365)
-  cert.public_key = req.public_key
-  cert.subject    = req.subject
-  cert.issuer     = ca.subject
-
-  ef = OpenSSL::X509::ExtensionFactory.new
-  ef.subject_certificate = cert
-  ef.issuer_certificate  = ca
-
-  cert.extensions = [
-      ef.create_extension( 'basicConstraints', 'CA:FALSE', true ),
-      ef.create_extension( 'extendedKeyUsage', 'serverAuth', false ),
-      ef.create_extension( 'subjectKeyIdentifier', 'hash' ),
-      ef.create_extension( 'subjectAltName', "IP:#{ip}" ),
-      ef.create_extension( 'authorityKeyIdentifier', 'keyid:always,issuer:always' ),
-      ef.create_extension( 'keyUsage',
-          %w(nonRepudiation digitalSignature
-          keyEncipherment dataEncipherment).join(","),
-          true
-      )
-  ]
-  cert.sign( ca_key, OpenSSL::Digest::SHA1.new )
-end
-
-
 RSpec.configure do |c|
   # ensure that environment OS is ready on each host
   fix_errata_on hosts

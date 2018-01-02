@@ -21,6 +21,7 @@ class simp_kubernetes::node::kubelet {
       'args'              => $pki_params + $::simp_kubernetes::kubelet_args,
     }
   )
+  # TODO do that kubeconfig thing
 
   file { '/etc/kubernetes/kubelet':
     ensure  => 'file',

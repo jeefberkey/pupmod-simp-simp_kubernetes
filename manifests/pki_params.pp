@@ -23,9 +23,9 @@ class simp_kubernetes::pki_params {
 
   if $kube_api_protocol == 'https' and $use_simp_certs {
     $kube_pki_params = {
-      'tls-cert-file'        => $::simp_kubernetes::app_pki_key,
-      'tls-private-key-file' => $::simp_kubernetes::app_pki_cert,
-      'tls-ca-file'          => $::simp_kubernetes::app_pki_ca,
+      'tls-cert-file'            => $::simp_kubernetes::app_pki_key,
+      'tls-private-key-file'     => $::simp_kubernetes::app_pki_cert,
+      'tls-ca-file'              => $::simp_kubernetes::app_pki_ca,
     }
   }
   else {

@@ -17,10 +17,12 @@ class simp_kubernetes::master::apiserver {
       $address = "--bind-address=${api_listen_address}"
       $port    = "--secure-port=${$api_port}"
     }
+    $pki_params = { 'service-account-key-file' => $::simp_kubernetes::app_pki_key }
   }
   else {
-    $address = "--insecure-bind-address=${api_listen_address}"
-    $port    = "--insecure-port=${api_port}"
+    $address    = "--insecure-bind-address=${api_listen_address}"
+    $port       = "--insecure-port=${api_port}"
+    $pki_params = {}
   }
 
   $apiserver_template = epp('simp_kubernetes/etc/kubernetes/apiserver.epp', {
@@ -28,7 +30,7 @@ class simp_kubernetes::master::apiserver {
       'port'              => $port,
       'etcd_servers'      => $::simp_kubernetes::etcd_advertise_client_urls,
       'service_addresses' => $::simp_kubernetes::service_addresses,
-      'api_args'          => $::simp_kubernetes::every_node_api_args + $::simp_kubernetes::master_api_args,
+      'api_args'          => $::simp_kubernetes::every_node_api_args + $pki_params + $::simp_kubernetes::master_api_args,
     }
   )
 

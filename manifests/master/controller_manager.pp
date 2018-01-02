@@ -36,6 +36,7 @@ class simp_kubernetes::master::controller_manager {
         }
       ],
     }
+    $pki_params = { 'service-account-private-key-file' => $::simp_kubernetes::app_pki_key }
   }
   else {
     simp_kubernetes::kubeconfig { '/etc/kubernetes/controller-manager.kubeconfig':
@@ -59,12 +60,12 @@ class simp_kubernetes::master::controller_manager {
       ],
       users           => [],
     }
-
+    $pki_params = {}
   }
 
   # controller-manager uses a kubeconfig just like anything else that talks to the apiserver
   $controller_manager_template = epp('simp_kubernetes/etc/kubernetes/controller-manager.epp', {
-      'args' => $::simp_kubernetes::controller_args,
+      'args' => $pki_params + $::simp_kubernetes::controller_args,
     }
   )
 
