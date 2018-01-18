@@ -1,72 +1,34 @@
 ---
 
 lookup_options:
-  simp_kubernetes::etcd_peers:
+  simp_kubernetes::packages:
     merge: unique
-  simp_kubernetes::kube_masters:
-    merge: unique
-  '^simp_kubernetes::\w+_args$':
+  '^simp_kubernetes::\w+_ports$':
     merge:
       strategy: deep
       knockout_prefix: --
-  '^simp_kubernetes::\w+_options$':
-    merge:
-      strategy: deep
-      knockout_prefix: --
-  simp_kubernetes::flannel_network_config:
-    merge:
-      strategy: deep
 
-simp_kubernetes::is_master: false
-simp_kubernetes::network_tech: 'flannel'
-simp_kubernetes::manage_etcd: true
-simp_kubernetes::inject_network_config: true
-simp_kubernetes::etcd_static_cluster: true
-simp_kubernetes::etcd_prefix: /kube-simp/network
-simp_kubernetes::flannel_network_config:
-  Network: 10.30.0.0/16
-  SubnetLen: 24
-  Port: 8472
-  Backend:
-    Type: vxlan
+simp_kubernetes::manage_repo: true
+simp_kubernetes::repo_enabled: true
+simp_kubernetes::manage_packages: true
+simp_kubernetes::package_ensure: installed
+simp_kubernetes::manage_service: true
+simp_kubernetes::service_ensure: running
 
-simp_kubernetes::app_pki_key: "/etc/pki/simp_apps/simp_kubernetes/x509/private/%{facts.networking.fqdn}.pem"
-simp_kubernetes::app_pki_cert: "/etc/pki/simp_apps/simp_kubernetes/x509/private/%{facts.networking.fqdn}.pem"
-simp_kubernetes::app_pki_ca: /etc/pki/simp_apps/simp_kubernetes/x509/cacerts/cacerts.pem
+simp_kubernetes::packages:
+  - kubelet
+  - kubeadm
+  - kubectl
 
-simp_kubernetes::etcd_peer_listen_address: 0.0.0.0
-simp_kubernetes::etcd_peer_port: 2380
-simp_kubernetes::etcd_peer_protocol: http
-simp_kubernetes::etcd_client_listen_address: 0.0.0.0
-simp_kubernetes::etcd_client_port: 2379
-simp_kubernetes::etcd_client_protocol: http
-simp_kubernetes::etcd_app_pki_key: "/etc/pki/simp_apps/simp_kubernetes-etcd/x509/private/%{facts.networking.fqdn}.pem"
-simp_kubernetes::etcd_app_pki_cert: "/etc/pki/simp_apps/simp_kubernetes-etcd/x509/private/%{facts.networking.fqdn}.pem"
-simp_kubernetes::etcd_app_pki_ca: /etc/pki/simp_apps/simp_kubernetes-etcd/x509/cacerts/cacerts.pem
-simp_kubernetes::etcd_options: {}
+simp_kubernetes::master_ports:
+  6443:
+  2379:
+  2380:
+  10250:
+  10251:
+  10252:
+  10253:
 
-simp_kubernetes::kube_api_port: 8080
-simp_kubernetes::kube_api_protocol: http
-simp_kubernetes::insecure_on_localhost: true
-simp_kubernetes::allow_priv: false
-simp_kubernetes::logtostderr: true
-simp_kubernetes::log_level: 2
-simp_kubernetes::api_args: {}
-
-simp_kubernetes::service_addresses: 10.254.0.0/16
-simp_kubernetes::kube_api_listen_address: 0.0.0.0
-simp_kubernetes::kubelet_protocol: http
-simp_kubernetes::kubelet_port: 10250
-simp_kubernetes::master_api_args: {}
-simp_kubernetes::scheduler_args:
-  kubeconfig: /etc/kubernetes/scheduler.kubeconfig
-simp_kubernetes::controller_args:
-  kubeconfig: /etc/kubernetes/controller-manager.kubeconfig
-
-simp_kubernetes::kubelet_listen_address: 0.0.0.0
-simp_kubernetes::kubelet_hostname: ~
-simp_kubernetes::proxy_args:
-  kubeconfig: /etc/kubernetes/proxy.kubeconfig
-simp_kubernetes::kubelet_args: {}
-
-simp_kubernetes::flannel_args: {}
+simp_kubernetes::worker_ports:
+  10250:
+  10255:

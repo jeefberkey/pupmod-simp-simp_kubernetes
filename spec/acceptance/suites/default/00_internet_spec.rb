@@ -5,20 +5,10 @@ test_name 'kubernetes using redhat provided packages'
 
 describe 'kubernetes using redhat provided packages' do
 
-  masters    = hosts_with_role(hosts,'kube-master')
-  nodes      = hosts_with_role(hosts,'node')
-  controller = masters.first
+  masters = hosts_with_role(hosts,'master')
+  workers = hosts_with_role(hosts,'worker')
 
   manifest = "include 'simp_kubernetes'"
-
-  cluster = masters.map{|h| fact_on(h,'fqdn') }
-  base_hiera = {
-    'simp_kubernetes::etcd_peers'   => Array(cluster),
-    'simp_kubernetes::kube_masters' => Array(cluster),
-    'simp_kubernetes::flannel_args' => {
-      'iface' => 'eth1',
-    },
-  }
 
   hosts.each do |host|
     it 'should set a root password' do
@@ -27,30 +17,8 @@ describe 'kubernetes using redhat provided packages' do
     end
   end
 
-  # masters.each do |host|
-  #   it 'should set up etcd' do
-  #     # this will fail until all etcd servers are up
-  #     master_hiera = base_hiera.merge(
-  #       'simp_kubernetes::is_master' => true
-  #     )
-  #     set_hieradata_on(host, master_hiera)
-  #     apply_manifest_on(host, manifest, run_in_parallel: true)
-  #   end
-  # end
-  #
-  # masters.each do |host|
-  #   it 'should start etcd' do
-  #     on(host, 'systemctl restart etcd &', run_in_parallel: true)
-  #   end
-  # end
-
   masters.each do |host|
     it "should do master stuff on #{host}" do
-      master_hiera = base_hiera.merge(
-        'simp_kubernetes::is_master' => true
-      )
-      set_hieradata_on(host, master_hiera)
-      on(host, 'cat /etc/puppetlabs/code/hieradata/default.yaml')
       apply_manifest_on(host, manifest, catch_failures: true)
       apply_manifest_on(host, manifest, catch_changes: true)
     end
@@ -63,19 +31,9 @@ describe 'kubernetes using redhat provided packages' do
     end
   end
 
-  nodes.each do |host|
+  workers.each do |host|
     it "should do node stuff on #{host}" do
-      master_hiera = base_hiera.merge(
-        'simp_kubernetes::is_master' => false
-      )
-      set_hieradata_on(host, master_hiera)
-      on(host, 'cat /etc/puppetlabs/code/hieradata/default.yaml')
       apply_manifest_on(host, manifest, catch_failures: true)
-
-      # This is here due to a race condition with the kube-proxy service fully
-      # starting
-      retry_on(host, 'systemctl restart kube-proxy', acceptable_exit_codes: [0,130])
-
       apply_manifest_on(host, manifest, catch_changes: true)
     end
   end

@@ -1,8 +1,0 @@
-{
-  "Network": "10.30.0.0/16",
-  "SubnetLen": 24,
-  "Port": 8472,
-  "Backend": {
-    "Type": "vxlan"
-  }
-}

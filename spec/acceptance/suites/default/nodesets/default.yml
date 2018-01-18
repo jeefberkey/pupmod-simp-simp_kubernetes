@@ -3,7 +3,7 @@ HOSTS:
     roles:
       - server
       - default
-      - kube-master
+      - master
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
@@ -19,21 +19,21 @@ HOSTS:
   #   platform:   el-7-x86_64
   #   box:        centos/7
   #   hypervisor: vagrant
-  node01:
+  worker01:
     roles:
-      - node
+      - worker
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
-  node02:
+  worker02:
     roles:
-      - node
+      - worker
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
-  node03:
+  worker03:
     roles:
-      - node
+      - worker
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
