@@ -10,13 +10,13 @@ describe 'kubernetes using redhat provided packages' do
   workers    = hosts_with_role(hosts,'worker')
 
   worker_manifest = <<-EOF
-    # include 'iptables'
+    include 'iptables'
     class { 'simp_kubernetes':
       manage_service => false,
     }
   EOF
   master_manifest = <<-EOF
-    # include 'iptables'
+    include 'iptables'
     class { 'simp_kubernetes':
       manage_service => false,
       is_master      => true,
@@ -30,6 +30,7 @@ describe 'kubernetes using redhat provided packages' do
     end
     it 'should disabe swap' do
       on(host, 'swapoff -a')
+      on(host, "sed -i '/swap/d' /etc/fstab")
     end
     it 'should set up haveged' do
       host.install_package('epel-release')
@@ -74,16 +75,19 @@ describe 'kubernetes using redhat provided packages' do
 
   it 'should use kubeadm to bootstrap cluster' do
     require 'pry';binding.pry
-    @token = 'aaaaaa-aaaabbbbccccdddd'
+    # @token = 'aaaaaa-aaaabbbbccccdddd'
     @controller_ip = controller.ip
     # init_log = on(controller, "kubeadm init --token #{@token} --pod-network-cidr=192.168.0.0/16")
-    init_log = on(controller, "kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=#{@controller_ip}")
+    init_log = on(controller, "kubeadm init --pod-network-cidr=192.168.55.0/24 --apiserver-advertise-address=#{@controller_ip}")
     net_log  = on(controller, 'kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml')
+    @token = init_log.grep(/kubeadm join/)
+    p net_log
   end
 
   workers.each do |host|
     it 'should connect to the master' do
-      on(host, "kubeadm join --token #{@token}")
+      on(host, @token)
+      # on(host, "kubeadm join --token #{@token}")
     end
   end
 
