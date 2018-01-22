@@ -8,6 +8,8 @@ lookup_options:
       strategy: deep
       knockout_prefix: --
 
+simp_kubernetes::is_master: false
+simp_kubernetes::use_simp_docker: true
 simp_kubernetes::manage_repo: true
 simp_kubernetes::repo_enabled: true
 simp_kubernetes::manage_packages: true
@@ -19,8 +21,12 @@ simp_kubernetes::packages:
   - kubelet
   - kubeadm
   - kubectl
+  - kubernetes-cni
 
 simp_kubernetes::master_ports:
+  defaults:
+    proto: tcp
+    apply_to: ipv4
   6443:
   2379:
   2380:
@@ -30,5 +36,8 @@ simp_kubernetes::master_ports:
   10253:
 
 simp_kubernetes::worker_ports:
+  defaults:
+    proto: tcp
+    apply_to: ipv4
   10250:
   10255:

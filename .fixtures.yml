@@ -2,10 +2,6 @@
 fixtures:
   repositories:
     # base deps
-    etcd:
-      repo: https://github.com/cristifalcas/puppet-etcd
-      # patch made upstream
-      ref: 9e3bf7f71c2ad3d91351068a51d5db06ff8763fe
     simplib:
       repo: https://github.com/simp/pupmod-simp-simplib
       ref: 3.3.1
@@ -14,8 +10,19 @@ fixtures:
       ref: 4.24.0
     # integration deps
     iptables:
-      repo: https://github.com/simp/pupmod-simp-iptables
-      ref: 6.0.1
-    pki:
-      repo: https://github.com/simp/pupmod-simp-pki
-      ref: 6.0.1
+      repo: https://github.com/jeefberkey/pupmod-simp-iptables
+      ref: ports-define
+    simp_docker:
+      repo: https://github.com/simp/pupmod-simp-simp_docker
+      ref: master
+    ## deps for simp_docker
+    augeasproviders_core:
+      repo: https://github.com/simp/augeasproviders_core
+      ref: 2.1.4
+    augeasproviders_sysctl:
+      repo: https://github.com/simp/augeasproviders_sysctl
+      ref: 2.2.0
+    docker:
+      repo: https://github.com/simp/puppetlabs-docker
+      # requires fixes to the upstream module that have not been released yet
+      ref: 587748b6a5b140801f39cb883a1d92a4d40c662f

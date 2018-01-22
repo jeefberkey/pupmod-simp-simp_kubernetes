@@ -15,20 +15,20 @@ class simp_kubernetes (
   Boolean $manage_packages,
   String $package_ensure,
   Boolean $manage_service,
-  Boolean $service_ensure,
+  Optional[String] $service_ensure,
 ) {
   if $use_simp_docker { include 'simp_docker' }
 
   if $is_master {
-    simp_kubernetes::iptables($master_ports)
+    iptables::ports { 'kubernetes master': ports => $master_ports }
   }
   else {
-    simp_kubernetes::iptables($worker_ports)
+    iptables::ports { 'kubernetes worker': ports => $worker_ports }
   }
 
   if $manage_repo and $manage_packages {
-    $_enabled = $repo_enabled ? { true => 1, false => 0 }
-    yumrepo { 'kubernetes':
+    $_enabled = $repo_enabled ? { true => 1, default => 0 }
+    yumrepo { 'google-kubernetes':
       baseurl       => 'https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64',
       descr         => 'The kubernetes repository - from Google',
       enabled       => $_enabled,
@@ -39,7 +39,7 @@ class simp_kubernetes (
   }
 
   if $manage_packages {
-    $_require = $manage_repo ? { True => Yumrepo['kubernetes'], default => undef }
+    $_require = $manage_repo ? { true => Yumrepo['google-kubernetes'], default => undef }
     package { $packages:
       ensure  => $package_ensure,
       require => $_require,

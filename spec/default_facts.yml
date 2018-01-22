@@ -8,3 +8,7 @@ concat_basedir: /tmp
 fqdn: etcd01.test
 networking:
   fqdn: etcd01.test
+  interfaces:
+    lo:
+    eth0:
+    docker0:
