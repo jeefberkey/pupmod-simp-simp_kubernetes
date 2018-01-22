@@ -11,10 +11,10 @@ fixtures:
     # integration deps
     iptables:
       repo: https://github.com/jeefberkey/pupmod-simp-iptables
-      ref: ports-define
+      branch: ports-define
     simp_docker:
       repo: https://github.com/simp/pupmod-simp-simp_docker
-      ref: master
+      branch: master
     ## deps for simp_docker
     augeasproviders_core:
       repo: https://github.com/simp/augeasproviders_core
