@@ -23,6 +23,35 @@ describe 'kubernetes using redhat provided packages' do
     }
   EOF
 
+  shared_examples_for 'a healthy kubernetes cluster' do
+    sleep 60
+    it 'should get componentstatus with no unhealthy components' do
+      status = on(controller,
+        'kubectl get componentstatus',
+        environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
+      )
+      expect(status.stdout).not_to match(/Unhealthy/)
+    end
+    it 'should get nodes with all good statuses' do
+      status = on(controller,
+        'kubectl get nodes',
+        environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
+      )
+      status.stdout.split("\n")[1..-1].each do |node|
+        expect(node).to match(/Ready/)
+      end
+    end
+    it 'should get pods with all good statuses' do
+      status = on(controller,
+        'kubectl get pods --all-namespaces',
+        environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
+      )
+      status.stdout.split("\n")[1..-1].each do |pod|
+        expect(pod).to match(/Running/)
+      end
+    end
+  end
+
   hosts.each do |host|
     it 'should set a root password' do
       on(host, "sed -i 's/enforce_for_root//g' /etc/pam.d/*")
@@ -49,7 +78,8 @@ describe 'kubernetes using redhat provided packages' do
           'KUBE-'
         ],
         'iptables::ports' => {
-          '22' => nil
+          '22' => nil,
+          '6666' => nil
         },
         'simp_options::trusted_nets' => [
           '192.168.0.0/16',
@@ -86,40 +116,40 @@ describe 'kubernetes using redhat provided packages' do
   end
 
   it 'should use kubeadm to bootstrap cluster' do
-    # export KUBECONFIG=/etc/kubernetes/admin.conf
     # @token = 'aaaaaa-aaaabbbbccccdddd'
-    # init_log = on(controller, "kubeadm init --token #{@token} --pod-network-cidr=192.168.0.0/16")
     controller_ip = fact_on(controller, 'ipaddress_eth1')
-    require 'pry';binding.pry
-    init_log = on(controller, "kubeadm init --pod-network-cidr=192.168.55.0/24 --apiserver-advertise-address=#{controller_ip}")
-    @join_cmd = init_log.grep(/kubeadm join/)
+    init_log = on(controller, "kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=#{controller_ip}")
+    $join_cmd = init_log.stdout.split("\n").grep(/kubeadm join/).first
 
-    on(controller, 'kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml')
+    on(controller,
+      'kubectl taint nodes --all node-role.kubernetes.io/master-',
+      environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
+    )
+
+    on(controller,
+      'kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml',
+      environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
+    )
+    sleep 60
   end
 
   workers.each do |host|
     it 'should connect to the master' do
-      # on(host, "kubeadm join --token #{@join_cmd}")
-      on(host, @join_cmd)
+      on(host, $join_cmd)
     end
   end
 
-  # context 'check kubernetes health' do
-  #   it 'should get componentstatus with no unhealthy components' do
-  #     status = on(controller, 'kubectl get componentstatus')
-  #     expect(status.stdout).not_to match(/Unhealthy/)
-  #   end
-  # end
+  sleep 300 # to make sure the services get a chance to start up
+  it_behaves_like 'a healthy kubernetes cluster'
 
-  # context 'use kubernetes' do
-  #   it 'should deploy a nginx service' do
-  #     scp_to(controller, 'spec/acceptance/suites/one-master/test-nginx_deployment.yaml','/root/test-nginx_deployment.yaml')
-  #     on(controller, 'kubectl create -f /root/test-nginx_deployment.yaml')
-  #   end
-  #   it 'should delete it' do
-  #     sleep 30
-  #     on(controller, 'kubectl delete service nginx-service')
-  #     on(controller, 'kubectl delete deployment nginx-deployment')
-  #   end
-  # end
+  context 'use kubernetes' do
+    it 'should deploy a nginx service' do
+      on(controller,
+        'kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml',
+        environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
+      )
+    end
+  end
+
+  it_behaves_like 'a healthy kubernetes cluster'
 end

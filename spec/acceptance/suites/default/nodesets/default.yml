@@ -7,6 +7,7 @@ HOSTS:
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
+    vagrant_cpus: 2
   # master02:
   #   roles:
   #     - kube-master
@@ -31,16 +32,17 @@ HOSTS:
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
-  worker03:
-    roles:
-      - worker
-    platform:   el-7-x86_64
-    box:        centos/7
-    hypervisor: vagrant
+  # commented out for memory usage limitss
+  # worker03:
+  #   roles:
+  #     - worker
+  #   platform:   el-7-x86_64
+  #   box:        centos/7
+  #   hypervisor: vagrant
 
 CONFIG:
   log_level: verbose
   type:      aio
-  vagrant_memsize: 1024
   synced_folder: disabled
+  vagrant_memsize: 2048
 # vb_gui: true
