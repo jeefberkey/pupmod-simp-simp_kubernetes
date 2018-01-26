@@ -27,9 +27,10 @@ simp_kubernetes::master_ports:
   defaults:
     proto: tcp
     apply_to: ipv4
-  6443:
   2379:
   2380:
+  6443:
+  8081:
   10250:
   10251:
   10252:

@@ -32,7 +32,7 @@ HOSTS:
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
-  # commented out for memory usage limitss
+  # commented out for memory usage limits
   # worker03:
   #   roles:
   #     - worker

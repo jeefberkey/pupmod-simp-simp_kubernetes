@@ -139,8 +139,19 @@ describe 'kubernetes using redhat provided packages' do
     end
   end
 
-  sleep 300 # to make sure the services get a chance to start up
-  it_behaves_like 'a healthy kubernetes cluster'
+  it 'waits for bootstrap to finish' do
+    masters.each do |host|
+      retry_on(host,
+        'env KUBECONFIG="/etc/kubernetes/admin.conf" kubectl get pods --all-namespaces | grep -v "(ContainerCreating|Pending)"',
+        max_retries: 60,
+        retry_interval: 10
+      )
+    end
+  end
+
+  context 'should be healthy' do
+    it_behaves_like 'a healthy kubernetes cluster'
+  end
 
   context 'use kubernetes' do
     it 'should deploy a nginx service' do
@@ -151,5 +162,7 @@ describe 'kubernetes using redhat provided packages' do
     end
   end
 
-  it_behaves_like 'a healthy kubernetes cluster'
+  context 'should be healthy' do
+    it_behaves_like 'a healthy kubernetes cluster'
+  end
 end
