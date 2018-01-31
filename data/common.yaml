@@ -27,10 +27,10 @@ simp_kubernetes::master_ports:
   defaults:
     proto: tcp
     apply_to: ipv4
-  2379:
-  2380:
-  6443:
-  8081:
+  2379: # etcd
+  2380: # etcd peers
+  6443: # kube-apiserver
+  8081: # kube-dns health check
   10250:
   10251:
   10252:
@@ -40,5 +40,6 @@ simp_kubernetes::worker_ports:
   defaults:
     proto: tcp
     apply_to: ipv4
-  10250:
-  10255:
+  8081:  # kube-dns health check
+  10250: # kubelet -> kube-apiserver
+  10255: # kubelet -> kube-apiserver

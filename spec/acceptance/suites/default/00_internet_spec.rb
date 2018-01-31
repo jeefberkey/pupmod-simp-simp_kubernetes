@@ -1,9 +1,9 @@
 require 'spec_helper_acceptance'
 require 'json'
 
-test_name 'kubernetes using redhat provided packages'
+test_name 'kubernetes using kubeadm'
 
-describe 'kubernetes using redhat provided packages' do
+describe 'kubernetes using kubeadm' do
 
   masters    = hosts_with_role(hosts,'master')
   workers    = hosts_with_role(hosts,'worker')
@@ -38,7 +38,7 @@ describe 'kubernetes using redhat provided packages' do
         environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
       )
       status.stdout.split("\n")[1..-1].each do |node|
-        expect(node).to match(/Ready/)
+        expect(node).to match(/\sReady\s/)
       end
     end
     it 'should get pods with all good statuses' do
@@ -49,6 +49,18 @@ describe 'kubernetes using redhat provided packages' do
       status.stdout.split("\n")[1..-1].each do |pod|
         expect(pod).to match(/Running/)
       end
+    end
+  end
+
+  shared_examples_for 'wait for pods to finish deploying' do
+    it 'should not have pods in ContainerCreating or Pending status' do
+      sleep 20
+      retry_on(controller,
+        'env KUBECONFIG="/etc/kubernetes/admin.conf" kubectl get pods --all-namespaces --field-selector=status.phase!=ContainerCreating |& grep "No resources found"',
+        desired_exit_codes: 1,
+        retry_interval: 10,
+        max_retries: 60,
+      )
     end
   end
 
@@ -137,20 +149,12 @@ describe 'kubernetes using redhat provided packages' do
   workers.each do |host|
     it 'should connect to the master' do
       on(host, $join_cmd)
-    end
-  end
-
-  it 'waits for bootstrap to finish' do
-    masters.each do |host|
-      retry_on(host,
-        'env KUBECONFIG="/etc/kubernetes/admin.conf" kubectl get pods --all-namespaces --field-selector=status.phase!=ContainerCreating,status.phase!=Pending |& grep "No resources found"',
-        max_retries: 60,
-        retry_interval: 10
-      )
+      sleep 60
     end
   end
 
   context 'should be healthy' do
+    it_behaves_like 'wait for pods to finish deploying'
     it_behaves_like 'a healthy kubernetes cluster'
   end
 
@@ -164,6 +168,7 @@ describe 'kubernetes using redhat provided packages' do
   end
 
   context 'should be healthy' do
+    it_behaves_like 'wait for pods to finish deploying'
     it_behaves_like 'a healthy kubernetes cluster'
   end
 end
