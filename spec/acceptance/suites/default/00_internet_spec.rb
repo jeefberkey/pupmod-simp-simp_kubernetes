@@ -83,6 +83,13 @@ describe 'kubernetes using kubeadm' do
       host.install_package('jq')
       on(host, 'systemctl enable haveged --now')
     end
+    it 'should set up dnsmasq' do
+      host.install_package('dnsmasq')
+      on(host, 'systemctl enable dnsmasq --now')
+    end
+    # it 'should set sysctl' do
+    #   on(host, 'sysctl net.bridge.bridge-nf-call-iptables=1')
+    # end
     it 'should set hieradata' do
       hiera = {
         'iptables::ignore' => [
@@ -91,7 +98,7 @@ describe 'kubernetes using kubeadm' do
           'KUBE-'
         ],
         'iptables::ports' => {
-          '22' => nil,
+          '22'   => nil,
           '6666' => nil
         },
         'simp_options::trusted_nets' => [
@@ -126,21 +133,31 @@ describe 'kubernetes using kubeadm' do
       on(host, 'systemctl daemon-reload')
       on(host, 'systemctl restart kubelet.service')
     end
+    it 'should not have any other cri network plugins installed' do
+      on(host, '[ ! -d /etc/cri ]')
+    end
   end
 
   it 'should use kubeadm to bootstrap cluster' do
-    # @token = 'aaaaaa-aaaabbbbccccdddd'
     controller_ip = fact_on(controller, 'ipaddress_eth1')
-    init_log = on(controller, "kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address=#{controller_ip}")
+    init_cmd = [
+      'kubeadm init',
+      '--pod-network-cidr=192.168.0.0/16',
+      '--service-cidr=10.96.0.0/12',
+      "--apiserver-advertise-address=#{controller_ip}"
+    ].join(' ')
+    init_log = on(controller, init_cmd)
     $join_cmd = init_log.stdout.split("\n").grep(/kubeadm join/).first
 
+    # init
     on(controller,
       'kubectl taint nodes --all node-role.kubernetes.io/master-',
       environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
     )
 
+    # networking overlay (flannel)
     on(controller,
-      'kubectl apply -f https://docs.projectcalico.org/v2.6/getting-started/kubernetes/installation/hosted/kubeadm/1.6/calico.yaml',
+      'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml',
       environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
     )
     sleep 60
@@ -159,7 +176,7 @@ describe 'kubernetes using kubeadm' do
   end
 
   context 'use kubernetes' do
-    it 'should deploy a nginx service' do
+    it 'should deploy the dashboard' do
       on(controller,
         'kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml',
         environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }

@@ -1,5 +1,6 @@
 # Full description of SIMP module 'simp_kubernetes' here.
 #
+# offline installation
 # https://gist.github.com/jgsqware/6595126e17afc6f187666b0296ea0723
 #
 # @author https://github.com/simp/pupmod-simp-simp_kubernetes/graphs/contributors
@@ -17,7 +18,7 @@ class simp_kubernetes (
   Boolean $manage_service,
   Optional[String] $service_ensure,
 ) {
-  if $use_simp_docker { include 'simp_docker' }
+  if $use_simp_docker { include '::simp_docker' }
 
   if $is_master {
     iptables::ports { 'kubernetes master': ports => $master_ports }
