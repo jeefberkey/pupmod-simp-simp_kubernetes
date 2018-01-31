@@ -10,8 +10,8 @@ fixtures:
       ref: 4.24.0
     # integration deps
     iptables:
-      repo: https://github.com/jeefberkey/pupmod-simp-iptables
-      branch: ports-define
+      repo: https://github.com/simp/pupmod-simp-iptables
+      branch: master
     simp_docker:
       repo: https://github.com/simp/pupmod-simp-simp_docker
       branch: master

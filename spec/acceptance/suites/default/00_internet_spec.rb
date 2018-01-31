@@ -68,6 +68,7 @@ describe 'kubernetes using redhat provided packages' do
     it 'should set up haveged' do
       host.install_package('epel-release')
       host.install_package('haveged')
+      host.install_package('jq')
       on(host, 'systemctl enable haveged --now')
     end
     it 'should set hieradata' do
@@ -142,7 +143,7 @@ describe 'kubernetes using redhat provided packages' do
   it 'waits for bootstrap to finish' do
     masters.each do |host|
       retry_on(host,
-        'env KUBECONFIG="/etc/kubernetes/admin.conf" kubectl get pods --all-namespaces | grep -v "(ContainerCreating|Pending)"',
+        'env KUBECONFIG="/etc/kubernetes/admin.conf" kubectl get pods --all-namespaces --field-selector=status.phase!=ContainerCreating,status.phase!=Pending |& grep "No resources found"',
         max_retries: 60,
         retry_interval: 10
       )
