@@ -17,6 +17,9 @@ simp_kubernetes::package_ensure: installed
 simp_kubernetes::manage_service: true
 simp_kubernetes::service_ensure: running
 
+simp_kubernetes::kubelet_overrides: |
+  Environment="KUBELET_CGROUP_ARGS=--cgroup-driver=systemd --runtime-cgroups=/systemd/system.slice --kubelet-cgroups=/systemd/system.slice"
+
 simp_kubernetes::packages:
   - kubelet
   - kubeadm

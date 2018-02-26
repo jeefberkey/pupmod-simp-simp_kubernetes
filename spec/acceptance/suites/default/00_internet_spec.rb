@@ -156,8 +156,10 @@ describe 'kubernetes using kubeadm' do
     )
 
     # networking overlay (flannel)
+    # this yaml file had to be modified to tell flannel to run over eth1 instead of eth0
+    create_remote_file(controller, '/root/kube-flannel.yaml', File.read('spec/acceptance/suites/default/files/kube-flannel.yaml'))
     on(controller,
-      'kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/v0.9.1/Documentation/kube-flannel.yml',
+      'kubectl apply -f /root/kube-flannel.yaml',
       environment: { 'KUBECONFIG' => '/etc/kubernetes/admin.conf' }
     )
     sleep 60
@@ -185,6 +187,7 @@ describe 'kubernetes using kubeadm' do
   end
 
   context 'should be healthy' do
+    sleep 60
     it_behaves_like 'wait for pods to finish deploying'
     it_behaves_like 'a healthy kubernetes cluster'
   end

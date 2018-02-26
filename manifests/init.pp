@@ -17,6 +17,7 @@ class simp_kubernetes (
   String $package_ensure,
   Boolean $manage_service,
   Optional[String] $service_ensure,
+  String $kubelet_overrides,
 ) {
   if $use_simp_docker { include '::simp_docker' }
 
@@ -51,6 +52,13 @@ class simp_kubernetes (
     service { 'kubelet':
       ensure => $service_ensure,
       enable => true,
+    }
+  }
+
+  if $kubelet_overrides {
+    file { '/etc/systemd/system/kubelet.service.d/override.conf':
+      ensure  => file,
+      content => $kubelet_overrides
     }
   }
 
